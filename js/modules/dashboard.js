@@ -363,6 +363,14 @@ OSApp.Dashboard.displayPage = function() {
 							"<div class='ui-bar-a ui-bar'>" + OSApp.Language._( "Remote Station" ) + ":</div>" +
 							"<input class='center' data-corners='false' data-wrapper-class='tight ui-btn stn-name' id='remote-station' required='true' type='number' min='1' max='200' placeholder='1' value='" + ( data.station + 1 ) + "'>"
 						).enhanceWithin();
+					} else if ( value === 10 ) { // LoRa valve node (special data: node id as 2 hex chars + zone '1'..'4')
+						data = ( type === value && /^[0-9a-fA-F]{2}[1-4]$/.test( data ) ) ? data : "011";
+						opts.append(
+							"<div class='ui-bar-a ui-bar'>" + OSApp.Language._( "LoRa node ID (1-255)" ) + ":</div>" +
+							"<input class='center' data-corners='false' data-wrapper-class='tight ui-btn stn-name' id='lora-node' required='true' type='number' min='1' max='255' placeholder='1' value='" + parseInt( data.substring( 0, 2 ), 16 ) + "'>" +
+							"<div class='ui-bar-a ui-bar'>" + OSApp.Language._( "Valve zone on node (1-4)" ) + ":</div>" +
+							"<input class='center' data-corners='false' data-wrapper-class='tight ui-btn stn-name' id='lora-zone' required='true' type='number' min='1' max='4' placeholder='1' value='" + data.substring( 2, 3 ) + "'>"
+						).enhanceWithin();
 					} else if ( value === 6 ) {
 						data = OSApp.Stations.parseRemoteStationData( ( type === value ) ? data : "OT000000000000000000000000000000,00" );
 						opts.append(
@@ -917,6 +925,10 @@ OSApp.Dashboard.displayPage = function() {
 						//000000000000 00 55 0100FF0001000000
 					} else if ( hs === 8 ) {
 						button.data( "specialData", String( parseInt( select.find( "#gardena-service" ).val(), 10 ) || 0 ) );
+					} else if ( hs === 10 ) { // LoRa valve node
+						var loraNode = Math.min( 255, Math.max( 1, parseInt( select.find( "#lora-node" ).val(), 10 ) || 1 ) );
+						var loraZone = Math.min( 4, Math.max( 1, parseInt( select.find( "#lora-zone" ).val(), 10 ) || 1 ) );
+						button.data( "specialData", OSApp.Utils.pad( loraNode.toString( 16 ) ).toUpperCase() + loraZone );
 					} else if ( hs === 9 ) { // Zigbee Station
 						var ieee = normalizeZigbeeIeee( select.find( "#zigbee-ieee" ).val() );
 						var endpoint = parseInt( select.find( "#zigbee-endpoint" ).val(), 10 ) || 1;
@@ -1095,6 +1107,7 @@ OSApp.Dashboard.displayPage = function() {
 					"<option data-hs='7' value='7'>" + OSApp.Language._( "RS 485 Modbus" ) + "</option>" +
 					"<option data-hs='8' value='8'" + ( OSApp.Firmware.isGardenaAvailable() ? ">" : " disabled>" ) + OSApp.Language._( "Gardena" ) + "</option>" +
 					"<option data-hs='9' value='9'" + ( OSApp.Firmware.isZigbeeAvailable() ? ">" : " disabled>" ) + OSApp.Language._( "Zigbee" ) + "</option>" +
+					"<option data-hs='10' value='10'>" + OSApp.Language._( "LoRa valve (Heltec)" ) + "</option>" +
 					"</select>" +
 					"<div id='specialOpts'></div>";
 			}
